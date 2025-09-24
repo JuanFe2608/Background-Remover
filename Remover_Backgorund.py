@@ -194,4 +194,3 @@ def main(page:ft.Page):
     
 ft.app(target=main)
 
-#2:37:53
