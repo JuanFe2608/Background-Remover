@@ -16,14 +16,14 @@ class BackgroundRemover:
     
     def __init__(self, input_folder, output_folder): 
         #Variables de instancia
-        self.input_folder = input_folder
-        self.output_folder = output_folder
+        self.input_folder = Path(input_folder)
+        self.output_folder = Path(output_folder)
         
     #Esqueleto del programa (Logica para la eliminacion de fondos con responsabilidades)
     
     """Funcion encargada de procesar multiples imagenes para 
     quitar el fondo"""
-    def process_images(self, filename_list, proces_callback=None): #Carpeta donde se va aguardar todo: Output/2025-09-10-00-00
+    def process_images(self, filename_list, proces_callback=None): #Carpeta donde se va a guardar todo: Output/2025-09-10-00-00
         today_date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         self._processed_folder = self.output_folder / today_date
         self._processed_folder.mkdir(parents=True, exist_ok = True)#Creacion de carpeta
@@ -42,7 +42,7 @@ class BackgroundRemover:
                     self._move_original(input_path)
                     processed += 1
                 except Exception as e:
-                    print("Hay un error " +e)
+                    print("Hay un error ", e)
                     
     
     """Funcion de tipo privado que verifica si la extension es
@@ -70,7 +70,7 @@ class BackgroundRemover:
         #Creacion de path para guardar la imagen: output/originals/image.png
         new_path = original_folder  / input_path.name 
         input_path.rename(new_path)
-#3:05:25
 
-obj = BackgroundRemover(Path(r"C:\Users\LENOVO\Documents\YO\Proyectos Python\App quitar fondo"),Path(r"C:\Users\LENOVO\Documents\YO\Proyectos Python\App quitar fondo\OutputImage"))
-obj.process_images(["Jordan.jpg"])
+
+#obj = BackgroundRemover(Path(r"C:\Users\LENOVO\Documents\YO\Proyectos Python\App quitar fondo"),Path(r"C:\Users\LENOVO\Documents\YO\Proyectos Python\App quitar fondo\OutputImage"))
+#obj.process_images(["Jordan.jpg"])

@@ -1,5 +1,6 @@
 import flet as ft
 import os 
+from removerBackgorund import BackgroundRemover
 
 class BackgroundRemoverApp:
     
@@ -19,16 +20,17 @@ class BackgroundRemoverApp:
        self._setup_page()
        self._create_components()
        self._build_ui()
-       
+      
        
     #Separacion de responsabilidades.
     
     def _setup_page(self):
         self.page.title = "Backgorund Remove Pro"#Nombre de la aplicacion
         self.page.bgcolor = "#1a1a2e" #Fondo de la app
-        self.page.window.height = 900 #Altura de la ventana
-        self.page.window.width = 700 #Ancho de a ventana 
+        self.page.window.height = 700 #Altura de la ventana
+        self.page.window.width = 600 #Ancho de a ventana 
         self.page.theme_mode = ft.ThemeMode.DARK
+        self.page.scroll = ft.ScrollMode.HIDDEN
     
     def _create_components(self):
         #Creacion de un CheckBox
@@ -54,7 +56,7 @@ class BackgroundRemoverApp:
             content_padding=ft.padding.all(15),
         )
         
-        self.file_picker = ft.FilePicker(on_result=self.pick_files_result)
+        self.file_picker = ft.FilePicker(on_result=self._pick_files_result)
         
         #Creacion Boton
         self.btn_pick_files = ft.ElevatedButton(
@@ -88,7 +90,7 @@ class BackgroundRemoverApp:
                 ft.Icon(ft.Icons.AUTO_FIX_HIGH,color="#ffffff"),
                 ft.Text("Remover Fondos", color="#ffffff", size=16, weight=ft.FontWeight.BOLD)
             ], alignment= ft.MainAxisAlignment.CENTER),
-            on_click= lambda _: print("hola"),
+            on_click= self._process_images_ui,
             bgcolor="#e94560",
             color="#ffffff",
             width=300,
@@ -102,6 +104,26 @@ class BackgroundRemoverApp:
         self.page.overlay.append(self.file_picker)#Se usa para agregar un control encima de la interfaz principal.
         
     def _build_ui(self):
+        
+        title = ft.Container(
+            content= ft.Text(
+                "Background Remover",
+                size=32,
+                weight=ft.FontWeight.BOLD,
+                color="#ffffff",
+                text_align=ft.TextAlign.CENTER
+            ),
+            alignment=ft.alignment.center,
+            padding=ft.padding.only(bottom=20)
+        )
+        
+        subtitle = ft.Text(
+            "Eliminar fondos de imágenes de forma rapida y sencilla",
+            size=16,
+            text_align=ft.TextAlign.CENTER,
+            italic=True
+        )
+        
         #Card de configuracion
         #Un container es un control que me permite almacenar o organizar diferentes coumnas
         config_card = ft.Container(
@@ -161,9 +183,7 @@ class BackgroundRemoverApp:
             width=600
         )
         
-        self.page.add(config_card,
-             files_card,
-             process_card,
+        self.page.add(title, subtitle, config_card, files_card, process_card,
              )
         
     
@@ -174,13 +194,15 @@ class BackgroundRemoverApp:
         self.output_folder_textfield.bgcolor = "#2a2a40" if e.control.value else "#16213e"
         self.page.update()
 
-    def pick_files_result(self, e: ft.FilePickerResultEvent): #Creacion de funcion usando Type Hinting para cuando se selecione cualquier elemento
+    def _pick_files_result(self, e: ft.FilePickerResultEvent): #Creacion de funcion usando Type Hinting para cuando se selecione cualquier elemento
         if e.files:
             file_count=len(e.files)#Capturar el numero de archivos que selecciono el usuario
             first_file_path = e.files[0].path#La ruta completa que representa el primer archivo
-            directory = os.path.dirname(first_file_path)#Obteniendo el nombre del directorio de la primera ruta que le pasamos
+            self.directory_path = os.path.dirname(first_file_path)#Obteniendo el nombre del directorio de la primera ruta que le pasamos
+                
+            self.filename_list = [filename.name for filename in e.files] #List comprehension
             
-            self.select_files_info.value = f" {file_count} Archivo(s) seleccionados \nCarpeta: {directory} " #Se modifica el estado del objeto select_files_info cuando se agregan archivos
+            self.select_files_info.value = f" {file_count} Archivo(s) seleccionados \nCarpeta: {self.directory_path} " #Se modifica el estado del objeto select_files_info cuando se agregan archivos
             
             self.select_files_info.color = "#4caf50"
         else: 
@@ -189,6 +211,22 @@ class BackgroundRemoverApp:
             
         self.page.update()
     
+    def _process_images_ui(self, e: ft.ControlEvent):
+        try:
+            output_folder = "Carepeta_Stream" if self.default_folder_check.value else self.output_folder_textfield.value
+            
+            if not output_folder.strip(): #strip elimina los espacios al principio y al final
+                print("Por favor especifica una carpeta de salida")
+                return
+            
+            remover = BackgroundRemover(self.directory_path, output_folder)
+            remover.process_images(self.filename_list)
+            
+            print("Su imagen ha sido procesada exitosamente")
+        except Exception as e:
+            print(f"Ha ocurrido un error {e}")
+
+        
 def main(page:ft.Page):
     obj = BackgroundRemoverApp(page)
     
