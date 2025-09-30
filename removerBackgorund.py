@@ -23,7 +23,7 @@ class BackgroundRemover:
     
     """Funcion encargada de procesar multiples imagenes para 
     quitar el fondo"""
-    def process_images(self, filename_list, proces_callback=None): #Carpeta donde se va a guardar todo: Output/2025-09-10-00-00
+    def process_images(self, filename_list, progress_callback=None): #Carpeta donde se va a guardar todo: Output/2025-09-10-00-00
         today_date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         self._processed_folder = self.output_folder / today_date
         self._processed_folder.mkdir(parents=True, exist_ok = True)#Creacion de carpeta
@@ -41,9 +41,13 @@ class BackgroundRemover:
                     self._remove_backgorund(input_path, output_path)
                     self._move_original(input_path)
                     processed += 1
+                    
+                    if progress_callback:
+                        progress_callback(processed, total_files, filename)
                 except Exception as e:
                     print("Hay un error ", e)
-                    
+                    if progress_callback:
+                        progress_callback(processed, total_files, filename, f"Error: {filename}")
     
     """Funcion de tipo privado que verifica si la extension es
     soportada"""

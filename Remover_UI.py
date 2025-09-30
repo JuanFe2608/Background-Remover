@@ -100,7 +100,28 @@ class BackgroundRemoverApp:
                 elevation=8     
             )
         )
-    
+        
+        #Progress Bar
+        
+        self.progress_bar = ft.ProgressBar(
+            width=500,
+            visible=False, #Solo se muestra cuando se procean imagenes
+            color="#e94560",
+            bgcolor="#16213e",
+            height=8
+        )
+
+        #Texto de progreso
+        
+        self.progress_text = ft.Text(
+            "",
+            visible=False,
+            color="#ffffff",
+            size=14,
+            text_align=ft.TextAlign.CENTER
+        )
+        
+        
         self.page.overlay.append(self.file_picker)#Se usa para agregar un control encima de la interfaz principal.
         
     def _build_ui(self):
@@ -166,6 +187,8 @@ class BackgroundRemoverApp:
             width=600
         )
         
+        #Card de boton de transformacion
+        
         process_card = ft.Container(
             content=ft.Column([
                 ft.Row([
@@ -175,6 +198,9 @@ class BackgroundRemoverApp:
                 ft.Container(height=20),
                 self.btn_extract,
                 ft.Container(height=15),
+                self.progress_bar,
+                ft.Container(height=10),
+                self.progress_text
             ], horizontal_alignment= ft.CrossAxisAlignment.CENTER),
             bgcolor="#16213e",
             padding=ft.padding.all(20),
@@ -183,7 +209,7 @@ class BackgroundRemoverApp:
             width=600
         )
         
-        self.page.add(title, subtitle, config_card, files_card, process_card,
+        self.page.add(title, subtitle, config_card, files_card, process_card
              )
         
     
@@ -206,26 +232,81 @@ class BackgroundRemoverApp:
             
             self.select_files_info.color = "#4caf50"
         else: 
-            self.select_files_info.value = "Selesccion Cancelada"
+            self.select_files_info.value = "Selección Cancelada"
             self.select_files_info.color = "#f44336"
             
         self.page.update()
     
     def _process_images_ui(self, e: ft.ControlEvent):
+        self.progress_bar.visible = True
+        self.progress_bar.value = 0
+        self.progress_text.visible = True
+        self.progress_text.value = "Iniciando proceamiento..."
+        self.progress_text.color="#ffffff"
+        self.btn_extract.disabled = True
+        self.btn_extract.bgcolor = "#666666"
+        self.page.update()
+
         try:
             output_folder = "Carepeta_Stream" if self.default_folder_check.value else self.output_folder_textfield.value
             
             if not output_folder.strip(): #strip elimina los espacios al principio y al final
-                print("Por favor especifica una carpeta de salida")
+                self._show_error("Por favor especifica una carpeta de salida")
                 return
             
             remover = BackgroundRemover(self.directory_path, output_folder)
-            remover.process_images(self.filename_list)
+            remover.process_images(self.filename_list, self._update_progress)
             
-            print("Su imagen ha sido procesada exitosamente")
+            self._show_success("Su imagen ha sido procesada exitosamente")
+            
         except Exception as e:
-            print(f"Ha ocurrido un error {e}")
+            self._show_error(f"Ha ocurrido un error {e}")
+        finally:
+            self._reset_ui()
 
+    def _update_progress(self, processed, total, current_file):
+        progress = processed / total
+        self.progress_bar.value = progress
+        self.progress_text.value = f"Procesando : {current_file} ({processed}/{total})"
+        self.page.update()
+        
+    def _reset_ui(self):
+        self.btn_extract.disabled = False
+        self.btn_extract.bgcolor = "#e94560"
+        self.page.update()
+
+    def _show_error(self, message):
+        dlg = ft.AlertDialog(
+            title=ft.Text("Error", color="#f44336"),
+            content=ft.Text(message, color="#ffffff"),
+            bgcolor="#16213e",
+            actions = [
+                ft.TextButton(
+                    "OK",
+                    on_click=lambda e: self.page.close(dlg),
+                    style=ft.ButtonStyle(color="#e94560")
+                )
+            ]
+        )
+        
+        self.page.open(dlg)
+        
+    def _show_success(self, message):
+        dlg = ft.AlertDialog(
+            title=ft.Text("¡Éxito!", color="#4caf50"),
+            content=ft.Text(message, color="#ffffff"),
+            bgcolor="#16213e",
+            actions = [
+                ft.TextButton(
+                    "!Genial¡",
+                    on_click=lambda e: self.page.close(dlg),
+                    style=ft.ButtonStyle(color="#4caf50")
+                )
+            ]
+        )
+        
+        self.page.open(dlg)
+        
         
 def main(page:ft.Page):
     obj = BackgroundRemoverApp(page)
