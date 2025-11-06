@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.log
+output/
+Carepeta_Stream/
+storage/
+*.DS_Store
